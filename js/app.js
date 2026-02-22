@@ -11,82 +11,68 @@ import * as api from './api.js';
 let currentUser = null;
 let currentTenant = { name: 'ČEZ Distribuce, a.s.' };
 
+// Demo users — no Supabase auth required
+const DEMO_USERS = {
+  'admin@energo.cz':    { full_name: 'Jan Novák',   role: 'Administrátor' },
+  'operator@energo.cz': { full_name: 'Eva Marková',  role: 'Operátor' },
+  'odectare@energo.cz': { full_name: 'Pavel Kříž',   role: 'Odečtář' },
+};
+
 async function boot() {
-  try {
-    const session = await api.getSession();
-    if (session) {
-      currentUser = session.user;
-      await enterApp();
-    } else {
-      showLoginScreen();
-    }
-  } catch (e) {
-    console.error('Boot error', e);
-    showLoginScreen();
-  }
+  // Skip auth — go straight to app
+  enterApp('Jan Novák', 'Administrátor');
 }
 
 // ─────────────────────────────────────────────────────────────────
 // AUTH
 // ─────────────────────────────────────────────────────────────────
 
-function showLoginScreen() {
-  document.getElementById('login-screen').style.display = 'flex';
-}
-
-async function enterApp() {
-  // Hide the login popup
+function enterApp(name, role) {
+  // Hide login popup
   const ls = document.getElementById('login-screen');
   ls.style.opacity = '0';
   ls.style.transition = 'opacity .25s ease';
   setTimeout(() => { ls.style.display = 'none'; ls.style.opacity = ''; ls.style.transition = ''; }, 260);
 
-  const user = currentUser || await api.getUser();
-  if (user) {
-    const initials = (user.user_metadata?.full_name || user.email)
-      .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    document.getElementById('user-avatar').textContent = initials;
-    document.getElementById('user-name').textContent =
-      user.user_metadata?.full_name || user.email;
-    document.getElementById('user-role').textContent =
-      user.user_metadata?.role || 'Uživatel';
-  }
+  // Set user info in sidebar
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('user-name').textContent   = name;
+  document.getElementById('user-role').textContent   = role;
+
   nav('dashboard');
 }
 
-window.doLogin = async function () {
+window.doLogin = function () {
   const email = document.getElementById('email-input').value.trim();
-  const pass  = document.getElementById('pass-input').value;
   const btn   = document.querySelector('#login-screen .btn-primary');
 
   btn.disabled = true;
   btn.textContent = 'Přihlašuji…';
-  try {
-    const { user } = await api.signIn(email, pass);
-    currentUser = user;
-    await enterApp();
-  } catch (err) {
-    btn.disabled = false;
-    btn.textContent = 'Přihlásit se →';
-    showToast('🔒', err.message || 'Neplatné přihlašovací údaje', 'red');
-  }
+
+  setTimeout(() => {
+    const u = DEMO_USERS[email] || { full_name: email || 'Uživatel', role: 'Uživatel' };
+    enterApp(u.full_name, u.role);
+  }, 400);
 };
 
-window.doLogout = async function () {
-  await api.signOut();
-  currentUser = null;
-  document.getElementById('login-screen').style.display = 'flex';
+window.doLogout = function () {
+  const ls = document.getElementById('login-screen');
+  ls.style.display = 'flex';
+  ls.style.opacity = '1';
+  // Reset button
+  const btn = document.querySelector('#login-screen .btn-primary');
+  if (btn) { btn.disabled = false; btn.textContent = 'Přihlásit se →'; }
 };
 
-// Demo hint chips (fills credentials but still requires real Supabase auth)
 window.setDemo = function (role) {
-  const creds = {
-    admin:    ['admin@energo.cz',    ''],
-    operator: ['operator@energo.cz', ''],
-    reader:   ['odectare@energo.cz', ''],
+  const map = {
+    admin:    'admin@energo.cz',
+    operator: 'operator@energo.cz',
+    reader:   'odectare@energo.cz',
   };
-  const [email] = creds[role] || [];
-  if (email) document.getElementById('email-input').value = email;
+  const el = document.getElementById('email-input');
+  if (el && map[role]) el.value = map[role];
 };
 
 // ─────────────────────────────────────────────────────────────────

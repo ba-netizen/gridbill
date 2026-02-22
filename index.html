@@ -709,16 +709,12 @@ tbody td { padding: 12px 16px; font-size: 13.5px; }
       </svg>
     </div>
     <div class="login-title">Přihlásit se</div>
-    <div class="login-sub">Zadejte přihlašovací údaje pro přístup do systému</div>
+    <div class="login-sub">Vyberte roli nebo zadejte e-mail pro přístup do systému</div>
     <div class="form-field">
       <label>E-mail</label>
       <input type="email" id="email-input" value="admin@energo.cz" placeholder="vas@email.cz">
     </div>
-    <div class="form-field">
-      <label>Heslo</label>
-      <input type="password" id="pass-input" value="••••••••" placeholder="••••••••">
-    </div>
-    <button class="btn-primary" onclick="doLogin()">Přihlásit se →</button>
+    <button class="btn-primary" onclick="doLogin()">Vstoupit do systému →</button>
     <div class="login-demo-hints">
       <div class="hint-chip" onclick="setDemo('admin')">👑 Admin</div>
       <div class="hint-chip" onclick="setDemo('operator')">🧑‍💼 Operátor</div>
