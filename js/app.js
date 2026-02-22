@@ -260,18 +260,20 @@ async function renderCustomers() {
   <div class="filters-bar">
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" placeholder="Hledat zákazníka, IČ, adresu…" oninput="filterCustomers(this.value)">
+      <input type="text" id="cust-search" placeholder="Hledat zákazníka, IČ, adresu…" oninput="filterCustomers(this.value)">
     </div>
-    <select class="filter-select" id="cust-status-filter" onchange="filterCustomers('')">
+    <select class="filter-select" id="cust-status-filter" onchange="filterCustomers(document.getElementById('cust-search').value)">
       <option value="">Všechny stavy</option>
       <option value="active">Aktivní</option>
       <option value="warning">Upomínka</option>
       <option value="blocked">Blokovaný</option>
     </select>
-    <select class="filter-select">
-      <option>Všechny komodity</option>
-      <option>⚡ Elektřina</option><option>🔥 Plyn</option>
-      <option>💧 Voda</option><option>♨️ Teplo</option>
+    <select class="filter-select" id="cust-commodity-filter" onchange="filterCustomers(document.getElementById('cust-search').value)">
+      <option value="">Všechny komodity</option>
+      <option value="EE">⚡ Elektřina</option>
+      <option value="GAS">🔥 Plyn</option>
+      <option value="WATER">💧 Voda</option>
+      <option value="HEAT">♨️ Teplo</option>
     </select>
     <button class="btn btn-blue btn-sm" style="margin-left:auto" onclick="openNewCustomerModal()">+ Nový zákazník</button>
   </div>
@@ -293,11 +295,21 @@ async function renderCustomers() {
 }
 
 window.filterCustomers = function (q) {
-  const statusF = document.getElementById('cust-status-filter')?.value || '';
-  const rows = _customers.filter(c =>
-    (q === '' || (c.name || '').toLowerCase().includes(q.toLowerCase()) || (c.code || '').includes(q)) &&
-    (statusF === '' || c.status === statusF)
-  );
+  const statusF    = document.getElementById('cust-status-filter')?.value    || '';
+  const commodityF = document.getElementById('cust-commodity-filter')?.value || '';
+  const search     = (q || document.getElementById('cust-search')?.value || '').toLowerCase();
+
+  const rows = _customers.filter(c => {
+    const matchSearch = search === '' ||
+      (c.name  || '').toLowerCase().includes(search) ||
+      (c.code  || '').toLowerCase().includes(search) ||
+      (c.email || '').toLowerCase().includes(search) ||
+      (c.address || '').toLowerCase().includes(search);
+    const matchStatus    = statusF    === '' || c.status === statusF;
+    const commodities    = (c.customer_commodities || []).map(x => x.commodity);
+    const matchCommodity = commodityF === '' || commodities.includes(commodityF);
+    return matchSearch && matchStatus && matchCommodity;
+  });
 
   const cmdColor = { EE:'badge-blue', GAS:'badge-amber', WATER:'badge-green', HEAT:'badge-red' };
   const cmdLabel = { EE:'⚡ EE', GAS:'🔥 GAS', WATER:'💧 H₂O', HEAT:'♨️ CZT' };
@@ -575,12 +587,14 @@ window.openMeterModal = function (id) {
 // INVOICES
 // ─────────────────────────────────────────────────────────────────
 
+let _invoices = [];
+
 async function renderInvoices() {
   currentScreen = 'invoices';
   setContent(loadingState('Načítám faktury…'));
-  let invoices, stats;
+  let stats;
   try {
-    [invoices, stats] = await Promise.all([
+    [_invoices, stats] = await Promise.all([
       api.getInvoices(),
       api.getInvoiceStats().catch(() => null),
     ]);
@@ -589,11 +603,6 @@ async function renderInvoices() {
   }
 
   const s = stats || { total: 4812, paid: 4520, sent: 180, overdue: 112, overdue_czk_m: 1.4 };
-
-  const sb = { paid:'badge-green', sent:'badge-blue', overdue:'badge-red', draft:'badge-gray' };
-  const sl = { paid:'✓ Zaplacena', sent:'→ Odesláno', overdue:'! Po splatnosti', draft:'Návrh' };
-  const cb = { EE:'badge-blue', GAS:'badge-amber', HEAT:'badge-red', WATER:'badge-green' };
-  const cl = { EE:'⚡ EE', GAS:'🔥 GAS', HEAT:'♨️ CZT', WATER:'💧 VODA' };
 
   setContent(`
   <div class="kpi-grid" style="margin-bottom:16px">
@@ -610,38 +619,79 @@ async function renderInvoices() {
   </div>
   <div class="filters-bar">
     <div class="search-box"><span>🔍</span>
-      <input type="text" placeholder="Hledat číslo faktury, zákazníka…"></div>
-    <select class="filter-select"><option>Všechny komodity</option>
-      <option>EE</option><option>GAS</option><option>VODA</option><option>CZT</option></select>
-    <select class="filter-select"><option>Všechny stavy</option>
-      <option>Zaplaceno</option><option>Odesláno</option><option>Po splatnosti</option></select>
+      <input type="text" id="inv-search" placeholder="Hledat číslo faktury, zákazníka…"
+        oninput="filterInvoices()"></div>
+    <select class="filter-select" id="inv-commodity-filter" onchange="filterInvoices()">
+      <option value="">Všechny komodity</option>
+      <option value="EE">⚡ Elektřina</option>
+      <option value="GAS">🔥 Plyn</option>
+      <option value="WATER">💧 Voda</option>
+      <option value="HEAT">♨️ Teplo</option>
+    </select>
+    <select class="filter-select" id="inv-status-filter" onchange="filterInvoices()">
+      <option value="">Všechny stavy</option>
+      <option value="paid">Zaplaceno</option>
+      <option value="sent">Odesláno</option>
+      <option value="overdue">Po splatnosti</option>
+      <option value="draft">Návrh</option>
+    </select>
     <button class="btn btn-outline btn-sm"
       onclick="showToast('🏭','Hromadná fakturace spuštěna','blue')">🏭 Hromadná fakturace</button>
   </div>
   <div class="card">
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Číslo faktury</th><th>Zákazník</th><th>Typ</th><th>Komodita</th>
-          <th>Období od</th><th>Základ DPH</th><th>Celkem s DPH</th><th>Stav</th><th></th></tr></thead>
-        <tbody>
-          ${invoices.map(inv => `
-          <tr onclick="openInvoiceDetail('${inv.id}')">
-            <td class="mono" style="color:var(--blue2)">${inv.invoice_number}</td>
-            <td style="font-weight:600">${inv.customers?.name || '—'}</td>
-            <td><span class="badge badge-gray">${inv.invoice_type || '—'}</span></td>
-            <td><span class="badge ${cb[inv.commodity]||'badge-gray'}">${cl[inv.commodity]||inv.commodity}</span></td>
-            <td class="mono" style="font-size:12px;color:var(--text2)">${fmtDate(inv.period_from)}</td>
-            <td class="mono">${(inv.amount_net||0).toLocaleString('cs')} Kč</td>
-            <td class="mono" style="font-weight:700">${(inv.total_czk||0).toLocaleString('cs')} Kč</td>
-            <td><span class="badge ${sb[inv.status]||'badge-gray'}">${sl[inv.status]||inv.status}</span></td>
-            <td><button class="btn btn-ghost btn-sm"
-              onclick="event.stopPropagation();showToast('📄','PDF staženo','green')">📄</button></td>
-          </tr>`).join('')}
-        </tbody>
+        <thead><tr>
+          <th>Číslo faktury</th><th>Zákazník</th><th>Typ</th><th>Komodita</th>
+          <th>Období od</th><th>Základ DPH</th><th>Celkem s DPH</th><th>Stav</th><th></th>
+        </tr></thead>
+        <tbody id="invoices-tbody"></tbody>
       </table>
     </div>
   </div>`);
+
+  filterInvoices();
 }
+
+window.filterInvoices = function () {
+  const search     = (document.getElementById('inv-search')?.value    || '').toLowerCase();
+  const commodityF =  document.getElementById('inv-commodity-filter')?.value || '';
+  const statusF    =  document.getElementById('inv-status-filter')?.value    || '';
+
+  const sb = { paid:'badge-green', sent:'badge-blue', overdue:'badge-red', draft:'badge-gray' };
+  const sl = { paid:'✓ Zaplacena', sent:'→ Odesláno', overdue:'! Po splatnosti', draft:'Návrh' };
+  const cb = { EE:'badge-blue', GAS:'badge-amber', HEAT:'badge-red', WATER:'badge-green' };
+  const cl = { EE:'⚡ EE', GAS:'🔥 GAS', HEAT:'♨️ CZT', WATER:'💧 VODA' };
+
+  const rows = _invoices.filter(inv => {
+    const matchSearch = search === '' ||
+      (inv.invoice_number || '').toLowerCase().includes(search) ||
+      (inv.customers?.name || '').toLowerCase().includes(search) ||
+      (inv.invoice_type   || '').toLowerCase().includes(search);
+    const matchCommodity = commodityF === '' || inv.commodity === commodityF;
+    const matchStatus    = statusF    === '' || inv.status    === statusF;
+    return matchSearch && matchCommodity && matchStatus;
+  });
+
+  const tbody = document.getElementById('invoices-tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = rows.length === 0
+    ? `<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:32px">Žádné faktury neodpovídají filtru</td></tr>`
+    : rows.map(inv => `
+      <tr onclick="openInvoiceDetail('${inv.id}')">
+        <td class="mono" style="color:var(--blue2)">${inv.invoice_number}</td>
+        <td style="font-weight:600">${inv.customers?.name || '—'}</td>
+        <td><span class="badge badge-gray">${inv.invoice_type || '—'}</span></td>
+        <td><span class="badge ${cb[inv.commodity]||'badge-gray'}">${cl[inv.commodity]||inv.commodity}</span></td>
+        <td class="mono" style="font-size:12px;color:var(--text2)">${fmtDate(inv.period_from)}</td>
+        <td class="mono">${(inv.amount_net||0).toLocaleString('cs')} Kč</td>
+        <td class="mono" style="font-weight:700">${(inv.total_czk||0).toLocaleString('cs')} Kč</td>
+        <td><span class="badge ${sb[inv.status]||'badge-gray'}">${sl[inv.status]||inv.status}</span></td>
+        <td><button class="btn btn-ghost btn-sm"
+          onclick="event.stopPropagation();showToast('📄','PDF staženo','green')">📄</button></td>
+      </tr>`).join('');
+};
 
 window.openInvoiceDetail = async function (id) {
   openModal(`<div class="loading-state"><div class="spinner"></div></div>`);
