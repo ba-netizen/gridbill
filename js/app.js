@@ -245,15 +245,26 @@ async function renderDashboard() {
 
 let _customers = [];
 
+const DEMO_CUSTOMERS = [
+  { id:'22222222-0000-0000-0001-000000000001', code:'ZAK-00441', name:'Karel Dvořák',         type:'FO', address:'Jiráskova 14, Praha 2',       email:'karel.dvorak@email.cz',   status:'active',  risk_level:'low',    balance_czk: 2480,  customer_commodities:[{commodity:'EE'},{commodity:'GAS'}] },
+  { id:'22222222-0000-0000-0001-000000000002', code:'ZAK-00892', name:'MASO a.s.',            type:'PO', address:'Průmyslová 44, Brno',         email:'info@maso.cz',            status:'active',  risk_level:'high',  balance_czk:-14800, customer_commodities:[{commodity:'EE'},{commodity:'GAS'},{commodity:'HEAT'}] },
+  { id:'22222222-0000-0000-0001-000000000003', code:'ZAK-01204', name:'Jana Procházková',      type:'FO', address:'Tylova 8, Ostrava',           email:'jana.prochaz@email.cz',  status:'active',  risk_level:'low',    balance_czk:     0, customer_commodities:[{commodity:'EE'},{commodity:'WATER'}] },
+  { id:'22222222-0000-0000-0001-000000000004', code:'ZAK-01540', name:'BUILDING.cz s.r.o.',   type:'PO', address:'Nová 22, Plzeň',              email:'billing@building.cz',    status:'warning', risk_level:'medium', balance_czk: -4200, customer_commodities:[{commodity:'EE'},{commodity:'WATER'},{commodity:'HEAT'}] },
+  { id:'22222222-0000-0000-0001-000000000005', code:'ZAK-02008', name:'Petr Novotný',          type:'FO', address:'K Lesu 3, Olomouc',          email:'p.novotny@email.cz',      status:'active',  risk_level:'low',    balance_czk:   800, customer_commodities:[{commodity:'GAS'}] },
+  { id:'22222222-0000-0000-0001-000000000006', code:'ZAK-02344', name:'SVJ Horní 12',          type:'PO', address:'Horní 12, Liberec',          email:'svj.horni12@email.cz',    status:'active',  risk_level:'low',    balance_czk:  5120, customer_commodities:[{commodity:'HEAT'},{commodity:'WATER'}] },
+  { id:'22222222-0000-0000-0001-000000000007', code:'ZAK-02810', name:'Restaurace U Kohouta', type:'PO', address:'Náměstí 1, Pardubice',       email:'kohouta@restaurace.cz',   status:'blocked', risk_level:'high',  balance_czk:-28400, customer_commodities:[{commodity:'EE'},{commodity:'GAS'}] },
+  { id:'22222222-0000-0000-0001-000000000008', code:'ZAK-03102', name:'Marie Nováková',        type:'FO', address:'Lipová 5, České Budějovice', email:'marie.novakova@email.cz', status:'active',  risk_level:'low',    balance_czk:     0, customer_commodities:[{commodity:'EE'}] },
+];
+
 async function renderCustomers() {
   currentScreen = 'customers';
   setContent(loadingState('Načítám zákazníky…'));
 
   try {
     _customers = await api.getCustomers();
+    if (!_customers.length) _customers = DEMO_CUSTOMERS;
   } catch (e) {
-    setContent(errorState('Chyba načítání zákazníků: ' + e.message));
-    return;
+    _customers = DEMO_CUSTOMERS;
   }
 
   setContent(`
@@ -589,6 +600,16 @@ window.openMeterModal = function (id) {
 
 let _invoices = [];
 
+const DEMO_INVOICES = [
+  { id:'inv-001', invoice_number:'FAK-2026-04812', invoice_type:'komoditní',        commodity:'EE',    period_from:'2026-01-01', period_to:'2026-01-31', amount_net: 3538.84, vat_amount: 743.16, total_czk: 4280,  status:'paid',    issued_at:'2026-01-21', due_at:'2026-02-04', customers:{name:'Karel Dvořák'} },
+  { id:'inv-002', invoice_number:'FAK-2026-04811', invoice_type:'komoditní',        commodity:'EE',    period_from:'2026-01-01', period_to:'2026-01-31', amount_net:23504.13, vat_amount:4935.87, total_czk:28440,  status:'overdue', issued_at:'2026-01-21', due_at:'2026-02-04', customers:{name:'MASO a.s.'} },
+  { id:'inv-003', invoice_number:'FAK-2026-04810', invoice_type:'komoditní',        commodity:'GAS',   period_from:'2026-01-01', period_to:'2026-01-31', amount_net: 2578.51, vat_amount: 541.49, total_czk: 3120,  status:'sent',    issued_at:'2026-01-21', due_at:'2026-02-04', customers:{name:'Jana Procházková'} },
+  { id:'inv-004', invoice_number:'FAK-2026-04809', invoice_type:'záloha',           commodity:'HEAT',  period_from:'2026-02-01', period_to:'2026-02-28', amount_net: 7339.13, vat_amount:1100.87, total_czk: 8440,  status:'paid',    issued_at:'2026-01-21', due_at:'2026-02-04', customers:{name:'BUILDING.cz s.r.o.'} },
+  { id:'inv-005', invoice_number:'FAK-2026-04808', invoice_type:'komoditní',        commodity:'WATER', period_from:'2026-01-01', period_to:'2026-01-31', amount_net: 2504.35, vat_amount: 375.65, total_czk: 2880,  status:'sent',    issued_at:'2026-01-21', due_at:'2026-02-04', customers:{name:'SVJ Horní 12'} },
+  { id:'inv-006', invoice_number:'FAK-2026-04807', invoice_type:'komoditní',        commodity:'EE',    period_from:'2026-01-01', period_to:'2026-01-31', amount_net:10280.99, vat_amount:2159.01, total_czk:12440,  status:'overdue', issued_at:'2026-01-21', due_at:'2026-02-04', customers:{name:'Restaurace U Kohouta'} },
+  { id:'inv-007', invoice_number:'FAK-2026-04806', invoice_type:'roční vyúčtování', commodity:'EE',    period_from:'2025-10-01', period_to:'2025-12-31', amount_net: 3008.26, vat_amount: 631.74, total_czk: 3640,  status:'paid',    issued_at:'2026-01-04', due_at:'2026-01-18', customers:{name:'Marie Nováková'} },
+];
+
 async function renderInvoices() {
   currentScreen = 'invoices';
   setContent(loadingState('Načítám faktury…'));
@@ -598,8 +619,10 @@ async function renderInvoices() {
       api.getInvoices(),
       api.getInvoiceStats().catch(() => null),
     ]);
+    if (!_invoices.length) _invoices = DEMO_INVOICES;
   } catch (e) {
-    setContent(errorState('Chyba: ' + e.message)); return;
+    _invoices = DEMO_INVOICES;
+    stats = null;
   }
 
   const s = stats || { total: 4812, paid: 4520, sent: 180, overdue: 112, overdue_czk_m: 1.4 };
