@@ -32,12 +32,15 @@ async function boot() {
 
 function showLoginScreen() {
   document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
 }
 
 async function enterApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
+  // Hide the login popup
+  const ls = document.getElementById('login-screen');
+  ls.style.opacity = '0';
+  ls.style.transition = 'opacity .25s ease';
+  setTimeout(() => { ls.style.display = 'none'; ls.style.opacity = ''; ls.style.transition = ''; }, 260);
+
   const user = currentUser || await api.getUser();
   if (user) {
     const initials = (user.user_metadata?.full_name || user.email)
@@ -72,7 +75,7 @@ window.doLogin = async function () {
 window.doLogout = async function () {
   await api.signOut();
   currentUser = null;
-  showLoginScreen();
+  document.getElementById('login-screen').style.display = 'flex';
 };
 
 // Demo hint chips (fills credentials but still requires real Supabase auth)
