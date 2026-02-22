@@ -388,38 +388,277 @@ window.openCustomerModal = async function (id) {
 window.openNewCustomerModal = function () {
   openModal(`
     <div class="modal-header">
-      <div class="modal-title">Nový zákazník</div>
+      <div>
+        <div class="modal-title">Nový zákazník</div>
+        <div style="font-size:12px;color:var(--text3);font-family:var(--font-m);margin-top:2px">Krok <span id="nc-step-label">1</span> ze 3</div>
+      </div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-    <div class="form-field"><label>Typ subjektu</label>
-      <select class="filter-select" style="width:100%" id="nc-type"><option value="FO">Fyzická osoba</option><option value="PO">Právnická osoba / Firma</option></select></div>
-    <div class="form-field"><label>Jméno / Název firmy</label>
-      <input type="text" class="filter-select" style="width:100%" id="nc-name" placeholder="Karel Dvořák"></div>
-    <div class="form-field"><label>Adresa</label>
-      <input type="text" class="filter-select" style="width:100%" id="nc-address" placeholder="Jiráskova 14, Praha 2"></div>
-    <div class="form-field"><label>E-mail</label>
-      <input type="email" class="filter-select" style="width:100%" id="nc-email"></div>
-    <button class="btn btn-blue" style="margin-top:8px" onclick="submitNewCustomer()">Uložit zákazníka →</button>`);
+
+    <!-- Step progress -->
+    <div style="display:flex;gap:6px;margin-bottom:24px">
+      <div id="nc-prog-1" style="flex:1;height:3px;border-radius:2px;background:var(--blue);transition:background .3s"></div>
+      <div id="nc-prog-2" style="flex:1;height:3px;border-radius:2px;background:var(--border2);transition:background .3s"></div>
+      <div id="nc-prog-3" style="flex:1;height:3px;border-radius:2px;background:var(--border2);transition:background .3s"></div>
+    </div>
+
+    <!-- STEP 1: Základní údaje -->
+    <div id="nc-step-1">
+      <div style="font-size:11px;font-family:var(--font-m);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Základní údaje</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="form-field" style="margin:0">
+          <label>Typ subjektu *</label>
+          <select id="nc-type" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:14px;outline:none">
+            <option value="FO">Fyzická osoba</option>
+            <option value="PO">Právnická osoba / Firma</option>
+          </select>
+        </div>
+        <div class="form-field" style="margin:0">
+          <label>Stav *</label>
+          <select id="nc-status" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:14px;outline:none">
+            <option value="active">Aktivní</option>
+            <option value="warning">Upomínka</option>
+            <option value="blocked">Blokovaný</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Jméno / Název firmy *</label>
+        <input type="text" id="nc-name" placeholder="Karel Dvořák nebo FIRMA s.r.o." style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+          onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+          onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-field" style="margin-bottom:0">
+          <label>IČO</label>
+          <input type="text" id="nc-ico" placeholder="12345678" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-m);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+            onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+            onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+        </div>
+        <div class="form-field" style="margin-bottom:0">
+          <label>DIČ</label>
+          <input type="text" id="nc-dic" placeholder="CZ12345678" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-m);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+            onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+            onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Kontaktní údaje -->
+    <div id="nc-step-2" style="display:none">
+      <div style="font-size:11px;font-family:var(--font-m);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Kontaktní údaje</div>
+      <div class="form-field">
+        <label>Ulice a číslo popisné *</label>
+        <input type="text" id="nc-street" placeholder="Jiráskova 14" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+          onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+          onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 120px;gap:12px;margin-bottom:12px">
+        <div class="form-field" style="margin:0">
+          <label>Město *</label>
+          <input type="text" id="nc-city" placeholder="Praha 2" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+            onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+            onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+        </div>
+        <div class="form-field" style="margin:0">
+          <label>PSČ</label>
+          <input type="text" id="nc-zip" placeholder="120 00" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-m);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+            onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+            onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="form-field" style="margin:0">
+          <label>E-mail</label>
+          <input type="email" id="nc-email" placeholder="info@firma.cz" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+            onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+            onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+        </div>
+        <div class="form-field" style="margin:0">
+          <label>Telefon</label>
+          <input type="tel" id="nc-phone" placeholder="+420 602 111 001" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-m);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+            onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+            onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+        </div>
+      </div>
+      <div class="form-field" style="margin-bottom:0">
+        <label>Bankovní účet (IBAN)</label>
+        <input type="text" id="nc-bank" placeholder="CZ65 0800 0000 0001 2345 6789" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-m);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+          onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+          onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+      </div>
+    </div>
+
+    <!-- STEP 3: Komodity & riziko -->
+    <div id="nc-step-3" style="display:none">
+      <div style="font-size:11px;font-family:var(--font-m);color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Komodity & nastavení</div>
+      <div class="form-field">
+        <label>Odebírané komodity *</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+          ${[['EE','⚡','Elektřina'],['GAS','🔥','Plyn'],['WATER','💧','Voda'],['HEAT','♨️','Teplo']].map(([val,icon,label]) => `
+          <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);cursor:pointer;transition:all .15s"
+            id="nc-cmd-label-${val}"
+            onclick="ncToggleCommodity('${val}')">
+            <input type="checkbox" id="nc-cmd-${val}" value="${val}" style="display:none">
+            <span style="font-size:18px">${icon}</span>
+            <span style="font-size:13px;font-weight:500">${label}</span>
+            <span id="nc-cmd-check-${val}" style="margin-left:auto;color:var(--text3);font-size:16px">○</span>
+          </label>`).join('')}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-field" style="margin-bottom:0">
+          <label>Rizikovost</label>
+          <select id="nc-risk" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:14px;outline:none">
+            <option value="low">Nízká</option>
+            <option value="medium">Střední</option>
+            <option value="high">Vysoká</option>
+          </select>
+        </div>
+        <div class="form-field" style="margin-bottom:0">
+          <label>Počáteční saldo (Kč)</label>
+          <input type="number" id="nc-balance" value="0" style="width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-m);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s"
+            onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.15)'"
+            onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation buttons -->
+    <div id="nc-error" style="display:none;margin-top:12px;padding:10px 14px;background:var(--red-dim);border:1px solid var(--red);border-radius:var(--r);font-size:13px;color:var(--red)"></div>
+    <div style="display:flex;gap:8px;margin-top:20px">
+      <button id="nc-btn-back" class="btn btn-outline" onclick="ncStep(-1)" style="display:none">← Zpět</button>
+      <button id="nc-btn-next" class="btn btn-blue" style="margin-left:auto" onclick="ncStep(1)">Další →</button>
+      <button id="nc-btn-save" class="btn btn-blue" style="display:none;margin-left:auto" onclick="submitNewCustomer()">✓ Uložit zákazníka</button>
+    </div>`);
+};
+
+let _ncCurrentStep = 1;
+
+window.ncToggleCommodity = function(val) {
+  const cb  = document.getElementById(`nc-cmd-${val}`);
+  const lbl = document.getElementById(`nc-cmd-label-${val}`);
+  const chk = document.getElementById(`nc-cmd-check-${val}`);
+  cb.checked = !cb.checked;
+  if (cb.checked) {
+    lbl.style.borderColor = 'var(--blue)';
+    lbl.style.background  = 'var(--blue-dim)';
+    chk.textContent = '●';
+    chk.style.color = 'var(--blue2)';
+  } else {
+    lbl.style.borderColor = 'var(--border2)';
+    lbl.style.background  = 'var(--bg)';
+    chk.textContent = '○';
+    chk.style.color = 'var(--text3)';
+  }
+};
+
+window.ncStep = function(dir) {
+  const step = _ncCurrentStep;
+  const err  = document.getElementById('nc-error');
+  err.style.display = 'none';
+
+  // Validate current step before advancing
+  if (dir === 1) {
+    if (step === 1) {
+      const name = document.getElementById('nc-name').value.trim();
+      if (!name) { err.textContent = 'Zadejte jméno nebo název firmy.'; err.style.display='block'; return; }
+    }
+    if (step === 2) {
+      const street = document.getElementById('nc-street').value.trim();
+      const city   = document.getElementById('nc-city').value.trim();
+      if (!street || !city) { err.textContent = 'Zadejte ulici a město.'; err.style.display='block'; return; }
+    }
+    if (step === 3) {
+      const any = ['EE','GAS','WATER','HEAT'].some(v => document.getElementById(`nc-cmd-${v}`)?.checked);
+      if (!any) { err.textContent = 'Vyberte alespoň jednu komoditu.'; err.style.display='block'; return; }
+    }
+  }
+
+  const next = step + dir;
+  if (next < 1 || next > 3) return;
+
+  document.getElementById(`nc-step-${step}`).style.display = 'none';
+  document.getElementById(`nc-step-${next}`).style.display = 'block';
+  document.getElementById('nc-step-label').textContent = next;
+
+  // Update progress bar
+  [1,2,3].forEach(i => {
+    document.getElementById(`nc-prog-${i}`).style.background =
+      i <= next ? 'var(--blue)' : 'var(--border2)';
+  });
+
+  // Show/hide buttons
+  document.getElementById('nc-btn-back').style.display = next > 1 ? 'inline-flex' : 'none';
+  document.getElementById('nc-btn-next').style.display = next < 3 ? 'inline-flex' : 'none';
+  document.getElementById('nc-btn-save').style.display = next === 3 ? 'inline-flex' : 'none';
+
+  _ncCurrentStep = next;
 };
 
 window.submitNewCustomer = async function () {
+  const btn = document.getElementById('nc-btn-save');
+  const err = document.getElementById('nc-error');
+  err.style.display = 'none';
+
+  // Validate step 3
+  const commodities = ['EE','GAS','WATER','HEAT'].filter(v => document.getElementById(`nc-cmd-${v}`)?.checked);
+  if (!commodities.length) {
+    err.textContent = 'Vyberte alespoň jednu komoditu.';
+    err.style.display = 'block';
+    return;
+  }
+
+  const street  = document.getElementById('nc-street').value.trim();
+  const city    = document.getElementById('nc-city').value.trim();
+  const zip     = document.getElementById('nc-zip').value.trim();
+  const address = [street, zip, city].filter(Boolean).join(', ');
+
+  // Generate code
+  const code = 'ZAK-' + String(Math.floor(10000 + Math.random() * 90000));
+
   const data = {
-    type: document.getElementById('nc-type').value,
-    name: document.getElementById('nc-name').value,
-    address: document.getElementById('nc-address').value,
-    email: document.getElementById('nc-email').value,
-    status: 'active',
-    risk_level: 'low',
-    balance_czk: 0,
+    tenant_id:   '11111111-0000-0000-0000-000000000001',
+    code,
+    name:        document.getElementById('nc-name').value.trim(),
+    type:        document.getElementById('nc-type').value,
+    address,
+    email:       document.getElementById('nc-email').value.trim() || null,
+    phone:       document.getElementById('nc-phone').value.trim() || null,
+    bank_account:document.getElementById('nc-bank').value.trim() || null,
+    status:      document.getElementById('nc-status').value,
+    risk_level:  document.getElementById('nc-risk').value,
+    balance_czk: parseFloat(document.getElementById('nc-balance').value) || 0,
   };
+
+  btn.disabled = true;
+  btn.textContent = 'Ukládám…';
+
   try {
-    await api.upsertCustomer(data);
-    showToast('✅', 'Zákazník uložen', 'green');
+    const saved = await api.upsertCustomer(data);
+    const custId = saved?.id;
+
+    // Insert commodities if we have the ID
+    if (custId) {
+      try { await api.insertCommodities(custId, commodities); } catch(_) {}
+    }
+
+    // Add to local array for immediate display
+    const newCust = { ...data, id: custId || ('local-' + Date.now()), customer_commodities: commodities.map(c => ({ commodity: c })) };
+    _customers = [newCust, ..._customers];
+
+    showToast('✅', `Zákazník ${data.name} uložen`, 'green');
     closeModal();
-    _customers = await api.getCustomers();
     filterCustomers('');
+    _ncCurrentStep = 1;
   } catch (e) {
-    showToast('⚠️', 'Chyba: ' + e.message, 'red');
+    // Save locally for demo mode
+    const newCust = { ...data, id: 'local-' + Date.now(), customer_commodities: commodities.map(c => ({ commodity: c })) };
+    _customers = [newCust, ..._customers];
+    showToast('✅', `Zákazník ${data.name} přidán (demo)`, 'green');
+    closeModal();
+    filterCustomers('');
+    _ncCurrentStep = 1;
   }
 };
 

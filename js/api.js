@@ -89,6 +89,13 @@ export async function upsertCustomer(data) {
   return query(db => db.from('customers').upsert(data).select().single());
 }
 
+export async function insertCommodities(customerId, commodities) {
+  return query(db =>
+    db.from('customer_commodities')
+      .insert(commodities.map(c => ({ customer_id: customerId, commodity: c })))
+  );
+}
+
 // ─── CONTRACTS ───────────────────────────────────────────────────────────────
 
 export async function getContracts({ customerId = null, status = '' } = {}) {
