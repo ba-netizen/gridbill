@@ -1,0 +1,13 @@
+{
+  "name": "gridbill",
+  "version": "1.0.0",
+  "description": "GridBill — Distributor Billing Platform",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dev":   "npx serve . -p 3000 --cors",
+    "start": "npx serve . -p 3000"
+  },
+  "keywords": ["billing", "energy", "distributor", "utility", "czech"],
+  "license": "UNLICENSED"
+}
