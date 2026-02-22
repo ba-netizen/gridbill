@@ -1348,7 +1348,7 @@ function fmtDateTime(iso) {
 // KEYBOARD
 // ─────────────────────────────────────────────────────────────────
 
-document.getElementById('pass-input').addEventListener('keydown', e => {
+document.getElementById('email-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
 
