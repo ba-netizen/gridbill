@@ -19,7 +19,7 @@ const DEMO_USERS = {
 };
 
 async function boot() {
-  // Skip auth — go straight to app
+  // Start UI immediately — no auth check needed
   enterApp('Jan Novák', 'Administrátor');
 }
 
@@ -45,15 +45,8 @@ function enterApp(name, role) {
 
 window.doLogin = function () {
   const email = document.getElementById('email-input').value.trim();
-  const btn   = document.querySelector('#login-screen .btn-primary');
-
-  btn.disabled = true;
-  btn.textContent = 'Přihlašuji…';
-
-  setTimeout(() => {
-    const u = DEMO_USERS[email] || { full_name: email || 'Uživatel', role: 'Uživatel' };
-    enterApp(u.full_name, u.role);
-  }, 400);
+  const u = DEMO_USERS[email] || { full_name: email || 'Uživatel', role: 'Uživatel' };
+  enterApp(u.full_name, u.role);
 };
 
 window.doLogout = function () {

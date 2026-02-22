@@ -10,9 +10,10 @@ async function sb() { return sbReady; }
 
 async function query(fn) {
   const db = await sb();
+  if (!db) return [];
   const { data, error } = await fn(db);
-  if (error) throw error;
-  return data;
+  if (error) { console.warn('DB query error:', error.message); return []; }
+  return data ?? [];
 }
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────

@@ -1,29 +1,32 @@
 // js/config.js
 // Fetches Supabase credentials from /api/config, then initialises the client.
-// Exports a promise that resolves to the ready supabase client.
+// Returns null gracefully if config is unavailable.
 
 let _client = null;
+let _initPromise = null;
 
 export async function getSupabase() {
   if (_client) return _client;
+  if (_initPromise) return _initPromise;
 
-  // Fetch public credentials from serverless endpoint
-  const res = await fetch('/api/config');
-  if (!res.ok) {
-    throw new Error(`Failed to load app config: ${res.status}`);
-  }
-  const { url, key } = await res.json();
+  _initPromise = (async () => {
+    try {
+      const res = await fetch('/api/config');
+      if (!res.ok) throw new Error(`Config ${res.status}`);
+      const { url, key } = await res.json();
+      if (!url || !key) throw new Error('Missing url/key');
+      _client = window.supabase.createClient(url, key, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: { headers: {} },
+      });
+      return _client;
+    } catch (e) {
+      console.warn('Supabase config unavailable, running in offline mode:', e.message);
+      return null;
+    }
+  })();
 
-  // supabase-js v2 loaded via CDN in index.html
-  _client = window.supabase.createClient(url, key, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  });
-  return _client;
+  return _initPromise;
 }
 
-// Convenience: resolved once on first call, used everywhere
 export const sbReady = getSupabase();
